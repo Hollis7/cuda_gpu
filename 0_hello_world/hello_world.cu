@@ -5,7 +5,7 @@ __global__ void hello_world(void)
 }
 int main(int argc, char **argv)
 {
-  printf("CPU: Hello world!\n");
+  printf("CPU: Hello world!\n");e./
   hello_world<<<1, 10>>>();
   cudaDeviceReset(); // if no this line ,it can not output hello world from gpu
   return 0;

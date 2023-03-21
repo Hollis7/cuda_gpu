@@ -169,7 +169,7 @@ int main(int argc,char** argv)
 
 
 	//kernel 1:reduceNeighbored
-
+	//idata_dev <--- idata_host
 	CHECK(cudaMemcpy(idata_dev, idata_host, bytes, cudaMemcpyHostToDevice));
 	CHECK(cudaDeviceSynchronize());
 	iStart = cpuSecond();
@@ -178,6 +178,7 @@ int main(int argc,char** argv)
 	iElaps = cpuSecond() - iStart;
 	cudaMemcpy(odata_host, odata_dev, grid.x * sizeof(int), cudaMemcpyDeviceToHost);
 	gpu_sum = 0;
+	//Summing over each block
 	for (int i = 0; i < grid.x; i++)
 		gpu_sum += odata_host[i];
 	printf("gpu warmup                 elapsed %lf ms gpu_sum: %d<<<grid %d block %d>>>\n",
