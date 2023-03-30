@@ -176,8 +176,8 @@ int main(int argc, char **argv)
     p="transformNaiveCol";
     break;
   case 4:
-    transformNaiveColUnroll<<<grid_1, block_1>>>(A_dev, B_dev, nx, ny);
-    p="transformNaiveColUnroll";
+    transformNaiveRowUnroll<<<grid_1, block_1>>>(A_dev, B_dev, nx, ny);
+    p="transformNaiveRowUnroll";
     break;
   case 5:
     transformNaiveColUnroll<<<grid_1, block_1>>>(A_dev, B_dev, nx, ny);
