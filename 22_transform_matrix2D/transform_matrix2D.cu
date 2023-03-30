@@ -74,7 +74,7 @@ __global__ void transformNaiveColUnroll(float *out, float *in, int nx, int ny)
   int iy = threadIdx.y + blockDim.y * blockIdx.y;
   int idx_row = ix + iy * nx;
   int idx_col = ix * ny + iy;
-  if (ix < nx && iy < ny)
+  if (ix +blockDim.x*3< nx && iy < ny)
   {
     out[idx_row] = in[idx_col];
     out[idx_row + 1 * blockDim.x] = in[idx_col + ny * 1 * blockDim.x];
@@ -132,8 +132,8 @@ int main(int argc, char **argv)
   // Malloc
   float *A_host = (float *)malloc(nBytes);
   float *B_host = (float *)malloc(nBytes);
-  float *B_from_gpu = (float *)malloc(nBytes);
-  memset(B_from_gpu, 0, nBytes);
+  float *A_from_gpu = (float *)malloc(nBytes);
+  memset(A_from_gpu, 0, nBytes);
   initialData(A_host, nxy);
 
   // cudaMalloc
@@ -157,6 +157,7 @@ int main(int argc, char **argv)
   dim3 grid((nx - 1) / block.x + 1, (ny - 1) / block.y + 1);
   dim3 block_1(dimx, dimy);
   dim3 grid_1((nx - 1) / (block_1.x * 4) + 1, (ny - 1) / block_1.y + 1);
+  const char *p = NULL;
   iStart = cpuSecond();
   switch (transform_kernel)
   {
@@ -168,19 +169,23 @@ int main(int argc, char **argv)
     break;
   case 2:
     transformNaiveRow<<<grid, block>>>(A_dev, B_dev, nx, ny);
+    p="transformNaiveRow";
     break;
   case 3:
     transformNaiveCol<<<grid, block>>>(A_dev, B_dev, nx, ny);
+    p="transformNaiveCol";
     break;
   case 4:
     transformNaiveColUnroll<<<grid_1, block_1>>>(A_dev, B_dev, nx, ny);
+    p="transformNaiveColUnroll";
     break;
   case 5:
-
     transformNaiveColUnroll<<<grid_1, block_1>>>(A_dev, B_dev, nx, ny);
+    p="transformNaiveColUnroll";
     break;
   case 6:
     transformNaiveRowDiagonal<<<grid, block>>>(A_dev, B_dev, nx, ny);
+    p="transformNaiveRowDiagonal";
     break;
   case 7:
     transformNaiveColDiagonal<<<grid, block>>>(A_dev, B_dev, nx, ny);
@@ -190,15 +195,15 @@ int main(int argc, char **argv)
   }
   CHECK(cudaDeviceSynchronize());
   iElaps = cpuSecond() - iStart;
-  printf(" (kernal)Time elapsed %f sec\n", iElaps);
-  CHECK(cudaMemcpy(B_from_gpu, A_dev, nBytes, cudaMemcpyDeviceToHost));
-  checkResult(B_from_gpu, A_host, nxy);
+  printf(" (kernal %s)Time elapsed %f sec\n", p,iElaps);
+  CHECK(cudaMemcpy(A_from_gpu, A_dev, nBytes, cudaMemcpyDeviceToHost));
+  checkResult(A_from_gpu, A_host, nxy);
 
   cudaFree(A_dev);
   cudaFree(B_dev);
   free(A_host);
   free(B_host);
-  free(B_from_gpu);
+  free(A_from_gpu);
   cudaDeviceReset();
   return 0;
 }
