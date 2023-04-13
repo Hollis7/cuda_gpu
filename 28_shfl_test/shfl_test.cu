@@ -117,7 +117,7 @@ int main(int argc,char** argv)
     CHECK(cudaMemset(out_dev,0,nBytes));
 
 
-    // test  _shfl broadcast
+    // test_shfl broadcast
     dim3 block(dimx);
     dim3 grid((data_size-1)/block.x+1);
     switch(kernel_num)
