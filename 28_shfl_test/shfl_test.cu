@@ -6,23 +6,24 @@
 __global__ void test_shfl_broadcast(int *in,int*out,int const srcLans)
 {
     int value=in[threadIdx.x];
-    value=__shfl(value,srcLans,BDIM);
+    value=__shfl_sync(value,srcLans,BDIM);
     out[threadIdx.x]=value;
 
 }
 
-__global__ void test_shfl_up(int *in,int*out,int const delta)
+__global__ void test_shfl_up_sync(int *in,int*out,int const delta)
 {
     int value=in[threadIdx.x];
-    value=__shfl_up(value,delta,BDIM);
+    //value=__shfl_up(value,delta,BDIM);
+    value= __shfl_up_sync(0xffffffff,value,delta,BDIM);
     out[threadIdx.x]=value;
 
 }
 
-__global__ void test_shfl_down(int *in,int*out,int const delta)
+__global__ void test_shfl_down_sync(int *in,int*out,int const delta)
 {
     int value=in[threadIdx.x];
-    value=__shfl_down(value,delta,BDIM);
+    value=__shfl_down_sync(0xffffffff,value,delta,BDIM);
     out[threadIdx.x]=value;
 
 }
@@ -30,15 +31,15 @@ __global__ void test_shfl_down(int *in,int*out,int const delta)
 __global__ void test_shfl_wrap(int *in,int*out,int const offset)
 {
     int value=in[threadIdx.x];
-    value=__shfl(value,threadIdx.x+offset,BDIM);
+    value=__shfl_sync(0xffffffff,value,threadIdx.x+offset,BDIM);
     out[threadIdx.x]=value;
 
 }
 
-__global__ void test_shfl_xor(int *in,int*out,int const mask)
+__global__ void test_shfl_xor_sync(int *in,int*out,int const mask)
 {
     int value=in[threadIdx.x];
-    value=__shfl_xor(value,mask,BDIM);
+    value=__shfl_xor_sync(0xffffffff,value,mask,BDIM);
     out[threadIdx.x]=value;
 
 }
@@ -49,10 +50,10 @@ __global__ void test_shfl_xor_array(int *in,int*out,int const mask)
     int value[SEGM];
     for(int i=0;i<SEGM;i++)
         value[i]=in[idx+i];
-    value[0]=__shfl_xor(value[0],mask,BDIM);
-    value[1]=__shfl_xor(value[1],mask,BDIM);
-    value[2]=__shfl_xor(value[2],mask,BDIM);
-    value[3]=__shfl_xor(value[3],mask,BDIM);
+    value[0]=__shfl_xor_sync(0xffffffff,value[0],mask,BDIM);
+    value[1]=__shfl_xor_sync(0xffffffff,value[1],mask,BDIM);
+    value[2]=__shfl_xor_sync(0xffffffff,value[2],mask,BDIM);
+    value[3]=__shfl_xor_sync(0xffffffff,value[3],mask,BDIM);
     for(int i=0;i<SEGM;i++)
         out[idx+i]=value[i];
 
@@ -68,7 +69,7 @@ void swap(int *value,int laneIdx,int mask,int firstIdx,int secondIdx)
         value[secondIdx]=tmp;
 
     }
-    value[secondIdx]=__shfl_xor(value[secondIdx],mask,BDIM);
+    value[secondIdx]=__shfl_xor_sync(0xffffffff,value[secondIdx],mask,BDIM);
     if(pred)
     {
         int tmp=value[firstIdx];
@@ -126,19 +127,19 @@ int main(int argc,char** argv)
             printf("test_shfl_broadcast\n");
             break;
         case 1:
-            test_shfl_up<<<grid,block>>>(in_dev,out_dev,2);
-            printf("test_shfl_up\n");
+            test_shfl_up_sync<<<grid,block>>>(in_dev,out_dev,2);
+            printf("test_shfl_up_sync\n");
             break;
         case 2:
-            test_shfl_down<<<grid,block>>>(in_dev,out_dev,2);
-            printf("test_shfl_down\n");
+            test_shfl_down_sync<<<grid,block>>>(in_dev,out_dev,2);
+            printf("test_shfl_down_sync\n");
             break;
         case 3:
             test_shfl_wrap<<<grid,block>>>(in_dev,out_dev,2);
             printf("test_shfl_wrap\n");
             break;
         case 4:
-            test_shfl_xor<<<grid,block>>>(in_dev,out_dev,1);
+            test_shfl_xor_sync<<<grid,block>>>(in_dev,out_dev,1);
             printf("test_shfl_xor\n");
             break;
         case 5:
@@ -157,18 +158,17 @@ int main(int argc,char** argv)
     printf("input:\t");
     for(int i=0;i<data_size;i++)
         printf("%4d ",in_host[i]);
-    printf("\n\n\n\n\noutput:\t");
+    printf("\n\noutput:\t");
     for(int i=0;i<data_size;i++)
         printf("%4d ",out_gpu[i]);
     printf("\n");
-    CHECK(cudaMemset(out_dev,0,nBytes));
-    // stencil 1d read only
+    
 
 
     cudaFree(in_dev);
     cudaFree(out_dev);
     free(out_gpu);
-    //free(in_host);
-    cudaDeviceReset();
+    
+    CHECK(cudaDeviceReset());
     return 0;
 }
