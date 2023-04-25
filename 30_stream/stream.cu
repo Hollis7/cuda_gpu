@@ -38,6 +38,7 @@ int main()
     {
         cudaStreamCreate(&stream[i]);
     }
+    
     dim3 block(1);
     dim3 grid(1);
     cudaEvent_t start, stop;
