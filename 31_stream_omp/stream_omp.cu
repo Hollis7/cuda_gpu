@@ -29,7 +29,7 @@ __global__ void kernel_4()
 }
 int main()
 {
-    int n_stream = 4;
+    int n_stream = 16;
     cudaStream_t *stream = (cudaStream_t *)malloc(n_stream * sizeof(cudaStream_t));
     for (int i = 0; i < n_stream; i++)
     {
