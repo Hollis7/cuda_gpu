@@ -24,6 +24,30 @@ __device__ int myAtomicAdd(int *address, int incr)
     return oldValue;
 }
 
+__device__ float myAtomicAdd2(float* address, float incr)
+{
+    unsigned int* typeAddress = (unsigned int*)address;
+ 
+    float currentVal = *address;
+ 
+    unsigned int expected = __float2uint_rn(currentVal);
+ 
+    unsigned int desired = __float2uint_rn(currentVal + incr);
+ 
+    int oldIntValue = atomicCAS(typeAddress, expected, desired);
+ 
+    while(oldIntValue != expected)
+    {
+        expected = oldIntValue;
+ 
+        desired = __float2uint_rn(__uint2float_rn(oldIntValue) + incr);
+        oldIntValue = atomicCAS(typeAddress, expected, desired);
+ 
+    }
+ 
+    return __uint2float_rn(oldIntValue);
+}
+
 __global__ void kernel(int *sharedInteger)
 {
     myAtomicAdd(sharedInteger, 1);
