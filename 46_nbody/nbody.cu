@@ -228,6 +228,9 @@ int main(int argc, char **argv)
     real *h_px, *h_py;
     int *d_exceeded_speed, *d_beyond_bounds;
     int exceeded_speed, beyond_bounds;
+    float *h_csrVals;
+    int *h_csrCols;
+    int *h_csrRows;
 #ifdef VALIDATE
     int id;
     real *host_px, *host_py;
